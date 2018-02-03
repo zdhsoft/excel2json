@@ -51,7 +51,7 @@ insert into mytest set Field1 = 'test2', Field2 = 2, Field3 = ["ssss","abc"], Fi
 commit;
 ```
 - key 放弃不使用了
-- cfg 生成as3读取代码和配置数据(这种方式是一种自定方式数据格式） 也是基本上放弃不使用了
+- cfg 生成as3读取代码和配置数据(这种方式是一种自定方式数据格式） 也是基本上放弃不使用了  在as3souce目录下面，有所有相关解析的代码。
 ```data
 [CMyTest]
 <Field4,Field3,Field2,Field1>
