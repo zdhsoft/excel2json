@@ -7,6 +7,15 @@
 - 4. 映射表可以只列出filename中的一部分表头，生成时就只生成指定的列的信息
 - 5. 如果是字符串，无需对内容加双引号，直接对表头使用双引号即可
 
+## 增加了一个3.6.x的版本
+- 文件名：excel2conf.3.py 使用的python 3.6.4的　tools/script/2to3.py这个脚本转的
+- 用pip命令安装xlrd  
+```dos
+pip install xlrd
+```
+- 然后就可以运行了
+
+
 ## 输出支持的格式
 - csv 通用的csv表格格式
 ```csv
