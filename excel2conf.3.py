@@ -66,7 +66,12 @@ def readFieldMap(paramFields):
     mapField = {}
     strList = paramFields.split(",")
     for f in strList:
-        mapField[f] = f
+        strNameList = f.split(":"); #如果要读取的字段列表，有:的情况，表示输出字段名用后面指定的名称  如果  ChinaeseText:text  表示找到ChinaeseText文本，输出的名称为text
+        if len(strNameList) > 1:
+            mapField[strNameList[0]]=strNameList[1];
+        else:
+            mapField[f] = f
+
     return mapField
 
 #            table2as3config(destTable, destFileName, mapTable, mapParam)

@@ -15,6 +15,35 @@ pip install xlrd
 ```
 - 然后就可以运行了
 
+## 增加对字段别名的支持
+在excel表中的tablelist表中fields列中，增加了别名的支持
+如language.xlsx中
+```
+filename	describe	outfilename	fields
+language	测试	language_cn.json	id,cn:txt
+language	测试	language_en.json	id,en:txt
+language	测试	language_yn.json	id,yn:txt
+```
+生成json后，输出的字段名都变成txt了。
+
+
+## 数据类型说明
+- 在具体数据表的字段名称上面有""括起来的，表示这例数据是字符串
+- 没有引号的则主要是数字或数组，对于数字，如果没有小数的，则会生成整数
+```python
+def FloatToString (aFloat):
+    if type(aFloat) != float:
+        return ""
+    strTemp = str(aFloat)
+    strList = strTemp.split(".")
+    if len(strList) == 1 :
+        return strTemp
+    else:
+        if strList[1] == "0" :
+            return strList[0]
+        else:
+            return strTemp
+```
 
 ## 输出支持的格式
 - csv 通用的csv表格格式

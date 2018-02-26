@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 # 这段代码主要的功能是把excel表格转换成utf-8格式的json文件
-
+# lastdate:2011-8-15 14:21 version 1.1 
 
 import os
 import sys
@@ -66,7 +66,12 @@ def readFieldMap(paramFields):
     mapField = {}
     strList = paramFields.split(",")
     for f in strList:
-        mapField[f] = f
+        strNameList = f.split(":"); #如果要读取的字段列表，有:的情况，表示输出字段名用后面指定的名称  如果  ChinaeseText:text  表示找到ChinaeseText文本，输出的名称为text
+        if len(strNameList) > 1:
+            mapField[strNameList[0]]=strNameList[1];
+        else:
+            mapField[f] = f
+
     return mapField
 
 #            table2as3config(destTable, destFileName, mapTable, mapParam)
@@ -681,7 +686,7 @@ if __name__ == '__main__':
         suffix = destFileName[destFileName.rfind("."):].lower()
         if suffix == ".csv":
             table2csv(destTable, destFileName, mapTable, mapParam)
-        elif suffix == ".jsn" or suffix == ".js":
+        elif suffix == ".jsn" or suffix == ".js" or suffix == ".json":
             table2jsn(destTable, destFileName, mapTable, mapParam)
         elif suffix == ".conf":
             table2ini(destTable, destFileName, mapTable, mapParam)
