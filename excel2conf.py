@@ -21,6 +21,19 @@ def FloatToString (aFloat):
         else:
             return strTemp
 
+def ParseExtType(paramExtType):
+    strList = paramExtType.split(":")
+    retType = {}
+    if len(strList) == 2:
+        retType["key"] = strList[0]
+        retType["type"] = strList[1]
+    else:
+        retType["key"] = ""
+        retType["type"] = ""
+    return retType
+
+
+
 #查找第1个非要求的字符串的下标
 def findFirstNot(str, begin, substr):
     for i in range(begin, len(str)):
@@ -66,7 +79,7 @@ def readFieldMap(paramFields):
     mapField = {}
     strList = paramFields.split(",")
     for f in strList:
-        strNameList = f.split(":"); #如果要读取的字段列表，有:的情况，表示输出字段名用后面指定的名称  如果  ChinaeseText:text  表示找到ChinaeseText文本，输出的名称为text
+        strNameList = f.split(":");
         if len(strNameList) > 1:
             mapField[strNameList[0]]=strNameList[1];
         else:
@@ -189,7 +202,143 @@ def table2as3config(paramTable, paramDestFileName, paramUseFields, paramClassNam
     print "Create ",paramDestFileName," OK"
     return
 
+def table2map(table, jsonfilename, mapTable, mapParam, key):
+    nrows = table.nrows
+    ncols = table.ncols
+    hasMap = (len(mapTable) > 0)
+    dir = os.path.dirname(jsonfilename)
+    if dir and not os.path.exists(dir):
+        os.makedirs(dir)    
+    f = codecs.open(jsonfilename,"w","utf-8")
+    strTmp = u""
+    
+    #解析filter字符串
+    filterKey = []
+    filterString = ""
+    if "filter" in mapParam and len(mapParam["filter"]) > 0:
+        filterString = mapParam["filter"].decode("utf8")
+        filterKey = parseFilterKey(filterString)
 
+    #var xxx = 
+    if ("var" in mapParam) and (len(mapParam["var"]) > 0):
+        strTmp += u"var " + mapParam["var"] + u" = "
+
+    #name:[
+    if "name" in mapParam:
+        if (len(mapParam["name"]) > 0):
+            strTmp += u"{\n\t\"" + mapParam["name"] + "\":"
+    else:
+        strTmp += u"{\n"
+
+    #if len(strTmp) == 0:   #此时加个\t使前后对齐
+    #    strTmp += u"\t[\n"
+    #else:
+    #    strTmp += u"[\n"
+
+    if ("index1" in mapParam) and (mapParam["index1"]):
+        strTmp += u"\t\t{},\n"
+    f.write(strTmp)
+
+
+    keyIndex = -1
+
+    for c in range(ncols):
+        t = table.cell_value(0, c)
+        t = t.replace(u"\n", u"").replace(u"\"", u"")
+        if key == t:
+            keyIndex = c
+            break
+
+    rs = 0
+    for r in range(1, nrows):
+        i = 0
+        strFilter = filterString
+        skip_row = False
+        get_this = not (len(filterKey) > 0)
+
+        keyValue = table.cell_value(r,keyIndex)
+        if type(keyValue) == unicode:
+            keyValue = keyValue
+        elif type(keyValue) == float:
+            keyValue = FloatToString(keyValue)
+        else:
+            keyValue = str(keyValue)
+
+        strTmp = u"\t\""+keyValue + "\": { ";
+
+
+
+        for c in range(ncols):
+            if c == keyIndex:
+                continue
+
+            title = table.cell_value(0,c)
+            isString = (title.rfind(u"\"") >= 0)
+            title = title.replace(u"\n", u"").replace(u"\"", u"")
+
+            if hasMap:
+                if not title in mapTable:
+                    continue
+                else:
+                    title = mapTable[title]
+
+            strCellValue = u""
+            CellObj = table.cell_value(r,c)
+            if type(CellObj) == unicode:
+                strCellValue = CellObj
+            elif type(CellObj) == float:
+                strCellValue = FloatToString(CellObj)
+            else:
+                strCellValue = str(CellObj)
+
+            if isString:
+                strCellValue = strCellValue.replace(u"\n", u"").replace(u"\"", u"")
+
+            if not get_this and title in filterKey:
+                if isString:
+                    strFilter = strFilter.replace(u"$" + title, u"\"" + strCellValue + u"\"")
+                else:
+                    strFilter = strFilter.replace(u"$" + title, strCellValue)
+
+                if strFilter.find("$") == -1:
+                    if not eval(strFilter):  #被过滤了
+                        skip_row = True
+                        break
+                    else:
+                        get_this = True     #确定了这行要
+
+            if i > 0:
+                delm = u", "
+            else:
+                delm = u""
+
+            if isString:
+                strTmp += delm + u"\""  + title + u"\":\""+ strCellValue + u"\""
+            else:
+                strTmp += delm + u"\""  + title + u"\":"+ strCellValue
+            i += 1
+        
+        if skip_row:    #被过滤了
+            continue
+        
+        strTmp += u" }"
+        if rs > 0:  #不是第1行
+            f.write(u",\n")
+        f.write(strTmp)
+        rs += 1
+
+    strTmp = u""
+    if "name" in mapParam:
+        if (len(mapParam["name"]) > 0):
+            strTmp += u"\n}"
+    else:
+        strTmp += u"\n}"
+
+    strTmp += u"\n"
+    f.write(strTmp)
+    f.close()
+    print "Create ",jsonfilename," OK"
+    return
 
 def table2jsn(table, jsonfilename, mapTable, mapParam):
 # {"name":"数组名", "var":"变量名", "index1":True, "filter":"$Online>0 and $Name=='加速锦囊(1小时)'"}
@@ -676,6 +825,13 @@ if __name__ == '__main__':
             strClassName = table.cell_value(r+1,4)
         stFieldList = strUseFields.split(",")  #有用的字段列表
 
+        strExtType = u""
+        if(table.ncols > 6):
+            strExtType = table.cell_value(r+1, 5)
+
+        retType = ParseExtType(strExtType)
+        print strExtType, retType, retType["key"], retType["type"]
+
         mapParam = {}
 
         print "\nCreate " + destTableName + " ==> " + destFileName + " Starting..."
@@ -687,7 +843,10 @@ if __name__ == '__main__':
         if suffix == ".csv":
             table2csv(destTable, destFileName, mapTable, mapParam)
         elif suffix == ".jsn" or suffix == ".js" or suffix == ".json":
-            table2jsn(destTable, destFileName, mapTable, mapParam)
+            if retType["type"] == "map":
+                table2map(destTable, destFileName, mapTable, mapParam, retType["key"])
+            else:
+                table2jsn(destTable, destFileName, mapTable, mapParam)
         elif suffix == ".conf":
             table2ini(destTable, destFileName, mapTable, mapParam)
         elif suffix == ".sql":
