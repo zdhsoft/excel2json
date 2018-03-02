@@ -15,6 +15,30 @@ pip install xlrd
 ```
 - 然后就可以运行了
 
+## 增加了一个key-object模式json输出
+如下格式：
+```json
+//filename: test.json
+{
+	"test001": { "cn":"dd", "en":"dd", "yn":"dff" },
+	"test002": { "cn":"dd2", "en":"dd", "yn":"fff" }
+}
+
+
+//node.js下调用：
+let r = require('./test.json')
+console.log(r)
+//打印的结果，就和这个表的结果是一样的
+
+```
+
+### key-object配置
+在excel表格的tablelist,增加了一列是type,如果没有定义，则按照原来的array方式输出。
+如果有定义，则按要求输出：格式是  key:map
+- key表示是要做为key的字段名,如id,account等等
+- map表示是类型，固定值为map
+具体配置：参考language.xlsx表中的定义。
+
 ## 增加对字段别名的支持
 在excel表中的tablelist表中fields列中，增加了别名的支持
 如language.xlsx中
