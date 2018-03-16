@@ -826,7 +826,7 @@ if __name__ == '__main__':
         stFieldList = strUseFields.split(",")  #有用的字段列表
 
         strExtType = u""
-        if(table.ncols > 6):
+        if(table.ncols >= 6):
             strExtType = table.cell_value(r+1, 5)
 
         retType = ParseExtType(strExtType)
