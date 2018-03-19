@@ -269,8 +269,8 @@ def table2map(table, jsonfilename, mapTable, mapParam, key):
 
 
         for c in range(ncols):
-            if c == keyIndex:
-                continue
+            #if c == keyIndex:
+            #    continue
 
             title = table.cell_value(0,c)
             isString = (title.rfind(u"\"") >= 0)
