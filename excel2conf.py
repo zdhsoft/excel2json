@@ -33,7 +33,6 @@ def ParseExtType(paramExtType):
     return retType
 
 
-
 #查找第1个非要求的字符串的下标
 def findFirstNot(str, begin, substr):
     for i in range(begin, len(str)):
@@ -99,6 +98,31 @@ def CellToString(paramCell):
         strCellValue = str(paramCell)
     return strCellValue
 
+        #keyValue = table.cell_value(r,keyIndex)
+        #if type(keyValue) == unicode:
+            #keyValue = keyValue
+        #elif type(keyValue) == float:
+            #keyValue = FloatToString(keyValue)
+        #else:
+         #   keyValue = str(keyValue)
+def IsEmptyLine(paramTable, paramRow, paramFieldCount):
+    linecnt = 0
+    for i in range(paramFieldCount-1):
+        v = paramTable.cell_value(paramRow, i)
+        if type(v) == unicode:
+            v = v
+        elif type(v) == float:
+            v = FloatToString(v)
+        else:
+            v = str(v)
+        linecnt += len(v)
+
+    if linecnt == 0:
+        return True
+    else:
+        return False
+
+
 def table2as3config(paramTable, paramDestFileName, paramUseFields, paramClassName):
     nrows = paramTable.nrows
     ncols = paramTable.ncols
@@ -142,6 +166,8 @@ def table2as3config(paramTable, paramDestFileName, paramUseFields, paramClassNam
     f.write(strFieldList)
 
     for r in range(1, nrows):
+        if IsEmptyLine(table, r, ncols):  #跳过空行
+            continue
         strTmp = u"#"
         if field_count < 1:
             continue
@@ -158,7 +184,7 @@ def table2as3config(paramTable, paramDestFileName, paramUseFields, paramClassNam
                 if chFirst == u'[':
                     field_flag[col_index][2]=2
         col_index = use_field_index[field_count-1]
-        strCell = paramTable.cell_value(r, col_index)
+        strCell = CellToString(paramTable.cell_value(r, col_index))  
         if field_flag[col_index][1]:
             strTmp += u"\"" + strCell + u"\""
         else:
@@ -251,6 +277,8 @@ def table2map(table, jsonfilename, mapTable, mapParam, key):
 
     rs = 0
     for r in range(1, nrows):
+        if IsEmptyLine(table, r, ncols):  #跳过空行
+            continue
         i = 0
         strFilter = filterString
         skip_row = False
@@ -379,6 +407,8 @@ def table2jsn(table, jsonfilename, mapTable, mapParam):
     f.write(strTmp)
     rs = 0
     for r in range(1, nrows):
+        if IsEmptyLine(table, r, ncols):  #跳过空行
+            continue
         strTmp = u"\t\t{ "
         i = 0
         strFilter = filterString
@@ -483,6 +513,8 @@ def table2sql(table, jsonfilename, mapTable, mapParam):
         f.write(u"set autocommit=0;\n")
 
     for r in range(1, nrows):
+        if IsEmptyLine(table, r, ncols):  #跳过空行
+            continue
         strTmp = u"insert into " + tablename + " set "
         i = 0
         strFilter = filterString
@@ -572,6 +604,8 @@ def table2ini(table, inifilename, mapTable, mapParam):
     f = codecs.open(inifilename,"w","utf-8")
     rs = 1
     for r in range(1, nrows):
+        if IsEmptyLine(table, r, ncols):  #跳过空行
+            continue
         strTmp = u"[" + section + str(rs) + u"]\n"
         strFilter = filterString
         skip_row = False
@@ -646,6 +680,8 @@ def table2csv(table, csvfilename, mapTable, mapParam):
         filterKey = parseFilterKey(filterString)
 
     for r in range(nrows):
+        if IsEmptyLine(table, r, ncols):  #跳过空行
+            continue
         i = 0
         strFilter = filterString
         skip_row = False
@@ -735,6 +771,8 @@ def table2key(table, jsonfilename, mapTable, mapParam):
     f.write(strTmp)
     rs = 0
     for r in range(1, nrows): #跳过第1行标题
+        if IsEmptyLine(table, r, ncols):  #跳过空行
+            continue
         strTmp = u"\t"
         i = 0
         strFilter = filterString
@@ -856,7 +894,8 @@ if __name__ == '__main__':
         elif suffix == ".cfg":
             table2as3config(destTable, destFileName, stFieldList,strClassName)
         else:
-            print "only support jsn, ini, csv, conf, sql, .key, .cfg format"
+            print u"当前类型是:", suffix
+            print u"only support (jsn,js,json), csv, conf, sql, .key, .cfg format"
             exit(1)
 
     print "All OK"
