@@ -168,14 +168,14 @@ def table2map(table, jsonfilename, mapTable, key):
             strCellValue = u""
             CellObj = table.cell_value(r,c)
             if type(CellObj) == unicode:
-                strCellValue = CellObj
+                strCellValue = CellObj.replace(u"\\", u"\\\\").replace(u"\"", u"\\\"")
             elif type(CellObj) == float:
                 strCellValue = FloatToString(CellObj)
             else:
                 strCellValue = str(CellObj)
 
             if isString:
-                strCellValue = strCellValue.replace(u"\n", u"").replace(u"\"", u"")
+                strCellValue = strCellValue.replace(u"\n", u"");
 
             if i > 0:
                 delm = u", "
@@ -244,15 +244,14 @@ def table2jsn(table, jsonfilename, mapTable):
             strCellValue = u""
             CellObj = table.cell_value(r,c)
             if type(CellObj) == unicode:
-                strCellValue = CellObj
+                strCellValue = CellObj.replace(u"\\", u"\\\\").replace(u"\"", u"\\\"")
             elif type(CellObj) == float:
                 strCellValue = FloatToString(CellObj)
             else:
                 strCellValue = str(CellObj)
 
             if isString:
-                strCellValue = strCellValue.replace(u"\n", u"").replace(u"\"", u"")
-
+                strCellValue = strCellValue.replace(u"\n", u"")
 
             if i > 0:
                 delm = u", "
