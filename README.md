@@ -40,11 +40,11 @@ console.log(r)
 具体配置：参考language.xlsx表中的定义。
 
 ## 增加对字段别名的支持
-在excel表中的tablelist表中fields列中，增加了别名的支持
+在excel表中的tablelist表中fields列中，增加了别名的支持（支持原来是中文的名称）
 如language.xlsx中
 ```
 filename	describe	outfilename	fields
-language	测试	language_cn.json	id,cn:txt
+language	测试	language_cn.json	id,中文:txt
 language	测试	language_en.json	id,en:txt
 language	测试	language_yn.json	id,yn:txt
 ```
@@ -103,47 +103,6 @@ Field4 = [3,4]
 [mytest]
 Count = 2
 ```
-- sql 生成插入数据的sql语句
-```sql
-truncate table mytest;
-set names 'utf8';
-set autocommit=0;
-insert into mytest set Field1 = 'test1', Field2 = 1, Field3 = ["hello","hello1"], Field4 = [1,2];
-insert into mytest set Field1 = 'test2', Field2 = 2, Field3 = ["ssss","abc"], Field4 = [3,4];
-commit;
-```
-- key 放弃不使用了
-- cfg 生成as3读取代码和配置数据(这种方式是一种自定方式数据格式） 也是基本上放弃不使用了  在as3souce目录下面，有所有相关解析的代码。
-```data
-[CMyTest]
-<Field4,Field3,Field2,Field1>
-#[1,2],["hello","hello1"],1,"test1"
-#[3,4],["ssss","abc"],2,"test2"
-```
-```actionscript
-package com.hxgd.cfg
-{
-    public class CMyTest extends ConfigBase
-    {
-        public function CMyTest()
-        {
-            super();
-        }
 
-        override public function DoLoad(paramRecord:Array):void
-        {
-            Field4 = paramRecord[0];
-            Field3 = paramRecord[1];
-            Field2 = paramRecord[2];
-            Field1 = paramRecord[3];
-        }
-
-        public var Field4:Array=[];
-        public var Field3:Array=[];
-        public var Field2:Number;
-        public var Field1:String;
-    }
-}
-
-```
-
+## 去除的类型
+因为sql和key以及as3已经基本上用不了，在这里删除了对这三种数据的支持
