@@ -98,13 +98,6 @@ def CellToString(paramCell):
         strCellValue = str(paramCell)
     return strCellValue
 
-        #keyValue = table.cell_value(r,keyIndex)
-        #if type(keyValue) == unicode:
-            #keyValue = keyValue
-        #elif type(keyValue) == float:
-            #keyValue = FloatToString(keyValue)
-        #else:
-         #   keyValue = str(keyValue)
 def IsEmptyLine(paramTable, paramRow, paramFieldCount):
     linecnt = 0
     for i in range(paramFieldCount-1):
@@ -116,6 +109,8 @@ def IsEmptyLine(paramTable, paramRow, paramFieldCount):
         else:
             v = str(v)
         linecnt += len(v)
+        if linecnt > 0:
+            return False
 
     if linecnt == 0:
         return True
@@ -228,7 +223,7 @@ def table2as3config(paramTable, paramDestFileName, paramUseFields, paramClassNam
     print "Create ",paramDestFileName," OK"
     return
 
-def table2map(table, jsonfilename, mapTable, mapParam, key):
+def table2map(table, jsonfilename, mapTable, key):
     nrows = table.nrows
     ncols = table.ncols
     hasMap = (len(mapTable) > 0)
@@ -237,35 +232,9 @@ def table2map(table, jsonfilename, mapTable, mapParam, key):
         os.makedirs(dir)    
     f = codecs.open(jsonfilename,"w","utf-8")
     strTmp = u""
-    
-    #解析filter字符串
-    filterKey = []
-    filterString = ""
-    if "filter" in mapParam and len(mapParam["filter"]) > 0:
-        filterString = mapParam["filter"].decode("utf8")
-        filterKey = parseFilterKey(filterString)
-
-    #var xxx = 
-    if ("var" in mapParam) and (len(mapParam["var"]) > 0):
-        strTmp += u"var " + mapParam["var"] + u" = "
-
-    #name:[
-    if "name" in mapParam:
-        if (len(mapParam["name"]) > 0):
-            strTmp += u"{\n\t\"" + mapParam["name"] + "\":"
-    else:
-        strTmp += u"{\n"
-
-    #if len(strTmp) == 0:   #此时加个\t使前后对齐
-    #    strTmp += u"\t[\n"
-    #else:
-    #    strTmp += u"[\n"
-
-    if ("index1" in mapParam) and (mapParam["index1"]):
-        strTmp += u"\t\t{},\n"
+    strTmp += "{\n"
     f.write(strTmp)
-
-
+    
     keyIndex = -1
 
     for c in range(ncols):
@@ -280,9 +249,6 @@ def table2map(table, jsonfilename, mapTable, mapParam, key):
         if IsEmptyLine(table, r, ncols):  #跳过空行
             continue
         i = 0
-        strFilter = filterString
-        skip_row = False
-        get_this = not (len(filterKey) > 0)
 
         keyValue = table.cell_value(r,keyIndex)
         if type(keyValue) == unicode:
@@ -294,12 +260,7 @@ def table2map(table, jsonfilename, mapTable, mapParam, key):
 
         strTmp = u"\t\""+keyValue + "\": { ";
 
-
-
         for c in range(ncols):
-            #if c == keyIndex:
-            #    continue
-
             title = table.cell_value(0,c)
             isString = (title.rfind(u"\"") >= 0)
             title = title.replace(u"\n", u"").replace(u"\"", u"")
@@ -322,19 +283,6 @@ def table2map(table, jsonfilename, mapTable, mapParam, key):
             if isString:
                 strCellValue = strCellValue.replace(u"\n", u"").replace(u"\"", u"")
 
-            if not get_this and title in filterKey:
-                if isString:
-                    strFilter = strFilter.replace(u"$" + title, u"\"" + strCellValue + u"\"")
-                else:
-                    strFilter = strFilter.replace(u"$" + title, strCellValue)
-
-                if strFilter.find("$") == -1:
-                    if not eval(strFilter):  #被过滤了
-                        skip_row = True
-                        break
-                    else:
-                        get_this = True     #确定了这行要
-
             if i > 0:
                 delm = u", "
             else:
@@ -345,9 +293,6 @@ def table2map(table, jsonfilename, mapTable, mapParam, key):
             else:
                 strTmp += delm + u"\""  + title + u"\":"+ strCellValue
             i += 1
-        
-        if skip_row:    #被过滤了
-            continue
         
         strTmp += u" }"
         if rs > 0:  #不是第1行
@@ -368,8 +313,7 @@ def table2map(table, jsonfilename, mapTable, mapParam, key):
     print "Create ",jsonfilename," OK"
     return
 
-def table2jsn(table, jsonfilename, mapTable, mapParam):
-# {"name":"数组名", "var":"变量名", "index1":True, "filter":"$Online>0 and $Name=='加速锦囊(1小时)'"}
+def table2jsn(table, jsonfilename, mapTable):
     nrows = table.nrows
     ncols = table.ncols
     hasMap = (len(mapTable) > 0)
@@ -378,42 +322,20 @@ def table2jsn(table, jsonfilename, mapTable, mapParam):
         os.makedirs(dir)    
     f = codecs.open(jsonfilename,"w","utf-8")
     strTmp = u""
-    
-    #解析filter字符串
-    filterKey = []
-    filterString = ""
-    if "filter" in mapParam and len(mapParam["filter"]) > 0:
-        filterString = mapParam["filter"].decode("utf8")
-        filterKey = parseFilterKey(filterString)
-
-    #var xxx = 
-    if ("var" in mapParam) and (len(mapParam["var"]) > 0):
-        strTmp += u"var " + mapParam["var"] + u" = "
-
-    #name:[
-    if "name" in mapParam:
-        if (len(mapParam["name"]) > 0):
-            strTmp += u"{\n\t\"" + mapParam["name"] + "\":"
-    else:
-        strTmp += u"{\n\t\"list\":"
-
+    strTmp += "{\n\t\"list\":"
     if len(strTmp) == 0:   #此时加个\t使前后对齐
-        strTmp += u"\t[\n"
+        strTmp += "\t[\n"
     else:
-        strTmp += u"[\n"
+        strTmp += "[\n"
 
-    if ("index1" in mapParam) and (mapParam["index1"]):
-        strTmp += u"\t\t{},\n"
-    f.write(strTmp)
     rs = 0
+    f.write(strTmp)
     for r in range(1, nrows):
         if IsEmptyLine(table, r, ncols):  #跳过空行
             continue
         strTmp = u"\t\t{ "
         i = 0
-        strFilter = filterString
-        skip_row = False
-        get_this = not (len(filterKey) > 0)
+
         for c in range(ncols):
             title = table.cell_value(0,c)
             isString = (title.rfind(u"\"") >= 0)
@@ -437,18 +359,6 @@ def table2jsn(table, jsonfilename, mapTable, mapParam):
             if isString:
                 strCellValue = strCellValue.replace(u"\n", u"").replace(u"\"", u"")
 
-            if not get_this and title in filterKey:
-                if isString:
-                    strFilter = strFilter.replace(u"$" + title, u"\"" + strCellValue + u"\"")
-                else:
-                    strFilter = strFilter.replace(u"$" + title, strCellValue)
-
-                if strFilter.find("$") == -1:
-                    if not eval(strFilter):  #被过滤了
-                        skip_row = True
-                        break
-                    else:
-                        get_this = True     #确定了这行要
 
             if i > 0:
                 delm = u", "
@@ -461,8 +371,6 @@ def table2jsn(table, jsonfilename, mapTable, mapParam):
                 strTmp += delm + u"\""  + title + u"\":"+ strCellValue
             i += 1
         
-        if skip_row:    #被过滤了
-            continue
         
         strTmp += u" }"
         if rs > 0:  #不是第1行
@@ -746,7 +654,6 @@ def table2csv(table, csvfilename, mapTable, mapParam):
     return
 
 def table2key(table, jsonfilename, mapTable, mapParam):
-# {"var":"变量名", "filter":"$Online>0 and $Name=='加速锦囊(1小时)'"}
     nrows = table.nrows
     ncols = table.ncols
     hasMap = (len(mapTable) > 0)
@@ -882,9 +789,9 @@ if __name__ == '__main__':
             table2csv(destTable, destFileName, mapTable, mapParam)
         elif suffix == ".jsn" or suffix == ".js" or suffix == ".json":
             if retType["type"] == "map":
-                table2map(destTable, destFileName, mapTable, mapParam, retType["key"])
+                table2map(destTable, destFileName, mapTable, retType["key"])
             else:
-                table2jsn(destTable, destFileName, mapTable, mapParam)
+                table2jsn(destTable, destFileName, mapTable)
         elif suffix == ".conf":
             table2ini(destTable, destFileName, mapTable, mapParam)
         elif suffix == ".sql":
