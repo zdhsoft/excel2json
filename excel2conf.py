@@ -88,6 +88,20 @@ def readFieldMap(paramFields):
 
 #            table2as3config(destTable, destFileName, mapTable, mapParam)
 
+#判断是不是Json数组
+def IsJsonArray(paramValue):
+    if not isinstance(paramValue, unicode):
+        return False
+
+    v = unicode(paramValue).strip()
+    strLen = len(v)
+    if strLen < 2:
+        return False;
+    if (v[0] == u"[" and v[strLen-1] == u"]"):
+        return True
+    else:
+        return False
+
 def CellToString(paramCell):
     strCellValue = u""
     if type(paramCell) == unicode:
@@ -96,7 +110,7 @@ def CellToString(paramCell):
         strCellValue = FloatToString(paramCell)
     else:
         strCellValue = str(paramCell)
-    return strCellValue
+    return strCellValue.strip()
 
 def IsEmptyLine(paramTable, paramRow, paramFieldCount):
     linecnt = 0
@@ -244,14 +258,19 @@ def table2jsn(table, jsonfilename, mapTable):
             strCellValue = u""
             CellObj = table.cell_value(r,c)
             if type(CellObj) == unicode:
-                strCellValue = CellObj.replace(u"\\", u"\\\\").replace(u"\"", u"\\\"")
+                if not IsJsonArray(CellObj):
+                    strCellValue = CellObj.replace(u"\\", u"\\\\").replace(u"\"", u"\\\"")
+                else:
+                    strCellValue = CellObj
             elif type(CellObj) == float:
                 strCellValue = FloatToString(CellObj)
             else:
                 strCellValue = str(CellObj)
 
             if isString:
-                strCellValue = strCellValue.replace(u"\n", u"")
+                if not IsJsonArray(strCellValue):
+                    strCellValue = strCellValue.replace(u"\b", u"\\\b").replace(u"\f", u"\\\f").replace(u"\n", u"\\\n").replace(u"\r", u"\\\r").replace(u"\t", u"\\\t");
+                    # strCellValue = strCellValue.replace(u"\n", u"")
 
             if i > 0:
                 delm = u", "

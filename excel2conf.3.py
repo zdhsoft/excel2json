@@ -88,6 +88,20 @@ def readFieldMap(paramFields):
 
 #            table2as3config(destTable, destFileName, mapTable, mapParam)
 
+#判断是不是Json数组
+def IsJsonArray(paramValue):
+    if not isinstance(paramValue, str):
+        return False
+
+    v = str(paramValue).strip()
+    strLen = len(v)
+    if strLen < 2:
+        return False;
+    if (v[0] == "[" and v[strLen-1] == "]"):
+        return True
+    else:
+        return False
+
 def CellToString(paramCell):
     strCellValue = ""
     if type(paramCell) == str:
@@ -96,7 +110,7 @@ def CellToString(paramCell):
         strCellValue = FloatToString(paramCell)
     else:
         strCellValue = str(paramCell)
-    return strCellValue
+    return strCellValue.strip()
 
 def IsEmptyLine(paramTable, paramRow, paramFieldCount):
     linecnt = 0
@@ -244,14 +258,19 @@ def table2jsn(table, jsonfilename, mapTable):
             strCellValue = ""
             CellObj = table.cell_value(r,c)
             if type(CellObj) == str:
-                strCellValue = CellObj.replace("\\", "\\\\").replace("\"", "\\\"")
+                if not IsJsonArray(CellObj):
+                    strCellValue = CellObj.replace("\\", "\\\\").replace("\"", "\\\"")
+                else:
+                    strCellValue = CellObj
             elif type(CellObj) == float:
                 strCellValue = FloatToString(CellObj)
             else:
                 strCellValue = str(CellObj)
 
             if isString:
-                strCellValue = strCellValue.replace("\n", "")
+                if not IsJsonArray(strCellValue):
+                    strCellValue = strCellValue.replace("\b", "\\\b").replace("\f", "\\\f").replace("\n", "\\\n").replace("\r", "\\\r").replace("\t", "\\\t");
+                    # strCellValue = strCellValue.replace(u"\n", u"")
 
             if i > 0:
                 delm = ", "
