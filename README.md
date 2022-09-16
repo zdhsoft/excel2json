@@ -1,3 +1,6 @@
+# 注意：这个版本不再更新维护，现在改到使用typescript的版本了
+下面是这个github的连接 https://github.com/zdhsoft/excel2json_by_ts
+
 # excel2json 一个excel转json的工具
 - 这个工具是基于python 2.7.x的，对于excel的部分，使用的是xlrd这个开源库，在使用之前，请确定安装了这个库。
 - xlrd http://pypi.python.org/pypi/xlrd
